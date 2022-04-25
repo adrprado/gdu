@@ -22,6 +22,7 @@ type ParallelAnalyzer struct {
 	doneChan         common.SignalGroup
 	wait             *WaitGroup
 	ignoreDir        common.ShouldDirBeIgnored
+	ignoreFile       common.ShouldFileBeIgnored
 }
 
 // CreateAnalyzer returns Analyzer
@@ -61,7 +62,7 @@ func (a *ParallelAnalyzer) ResetProgress() {
 
 // AnalyzeDir analyzes given path
 func (a *ParallelAnalyzer) AnalyzeDir(
-	path string, ignore common.ShouldDirBeIgnored, constGC bool,
+	path string, ignore common.ShouldDirBeIgnored, ignoreFile common.ShouldFileBeIgnored, constGC bool,
 ) fs.Item {
 	if !constGC {
 		defer debug.SetGCPercent(debug.SetGCPercent(-1))
@@ -69,6 +70,7 @@ func (a *ParallelAnalyzer) AnalyzeDir(
 	}
 
 	a.ignoreDir = ignore
+	a.ignoreFile = ignoreFile
 
 	go a.updateProgress()
 	dir := a.processDir(path)
@@ -128,6 +130,12 @@ func (a *ParallelAnalyzer) processDir(path string) *Dir {
 			}(entryPath)
 		} else {
 			info, err = f.Info()
+
+			// =================================
+			if a.ignoreFile(info) {
+				continue
+			} // =================================
+
 			if err != nil {
 				log.Print(err.Error())
 				continue

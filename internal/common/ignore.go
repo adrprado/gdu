@@ -2,9 +2,11 @@ package common
 
 import (
 	"bufio"
+	iofs "io/fs"
 	"os"
 	"regexp"
 	"strings"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -128,4 +130,21 @@ func (ui *UI) CreateIgnoreFunc() ShouldDirBeIgnored {
 	default:
 		return func(name, path string) bool { return false }
 	}
+}
+
+func (ui *UI) CreateIgnoreFileFunc() ShouldFileBeIgnored {
+	return func(info iofs.FileInfo) bool {
+		return ui.ShouldBeIgnoredByDate(info)
+	}
+}
+
+func (ui *UI) ShouldBeIgnoredByDate(info iofs.FileInfo) bool {
+	if !ui.IgnoreBefore.IsZero() {
+		return info.ModTime().Before(ui.IgnoreBefore)
+	}
+	return false
+}
+
+func (ui *UI) SetIgnoreBefore(before time.Time) {
+	ui.IgnoreBefore = before
 }

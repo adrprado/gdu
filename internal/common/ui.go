@@ -3,6 +3,7 @@ package common
 import (
 	"regexp"
 	"strconv"
+	"time"
 )
 
 // UI struct
@@ -11,6 +12,7 @@ type UI struct {
 	IgnoreDirPaths        map[string]struct{}
 	IgnoreDirPathPatterns *regexp.Regexp
 	IgnoreHidden          bool
+	IgnoreBefore          time.Time
 	UseColors             bool
 	UseSIPrefix           bool
 	ShowProgress          bool

@@ -1,6 +1,7 @@
 package app
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -8,6 +9,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 
 	"net/http"
 	"net/http/pprof"
@@ -34,6 +36,7 @@ type UI interface {
 	SetIgnoreDirPatterns(paths []string) error
 	SetIgnoreFromFile(ignoreFile string) error
 	SetIgnoreHidden(value bool)
+	SetIgnoreBefore(before time.Time)
 	StartUILoop() error
 }
 
@@ -45,6 +48,7 @@ type Flags struct {
 	IgnoreDirs        []string
 	IgnoreDirPatterns []string
 	IgnoreFromFile    string
+	IgnoreBefore      string
 	MaxCores          int
 	ShowDisks         bool
 	ShowApparentSize  bool
@@ -134,6 +138,14 @@ func (a *App) Run() (err error) {
 
 	if a.Flags.NoHidden {
 		ui.SetIgnoreHidden(true)
+	}
+
+	if a.Flags.IgnoreBefore != "" {
+		before, err := parseTime(a.Flags.IgnoreBefore)
+		if err != nil {
+			return err
+		}
+		ui.SetIgnoreBefore(before)
 	}
 
 	a.setMaxProcs()
@@ -280,4 +292,15 @@ func (a *App) runAction(ui UI, path string) error {
 		}
 	}
 	return nil
+}
+
+func parseTime(input string) (time.Time, error) {
+	formats := []string{"2006-01-02", "2006-1-2", "02-01-2006", "2-1-2006", "02/01/2006", "2/1/2006"}
+	for _, format := range formats {
+		t, err := time.Parse(format, input)
+		if err == nil {
+			return t, nil
+		}
+	}
+	return time.Time{}, errors.New("Unrecognized time format")
 }

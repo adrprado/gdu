@@ -94,7 +94,7 @@ func (ui *UI) AnalyzePath(path string, _ fs.Item) error {
 	wait.Add(1)
 	go func() {
 		defer wait.Done()
-		dir = ui.Analyzer.AnalyzeDir(path, ui.CreateIgnoreFunc(), ui.ConstGC)
+		dir = ui.Analyzer.AnalyzeDir(path, ui.CreateIgnoreFunc(), ui.CreateIgnoreFileFunc(), ui.ConstGC)
 		dir.UpdateStats(make(fs.HardLinkedItems, 10))
 	}()
 

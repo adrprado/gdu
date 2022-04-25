@@ -1,6 +1,7 @@
 package analyze
 
 import (
+	iofs "io/fs"
 	"os"
 	"sort"
 	"testing"
@@ -22,7 +23,7 @@ func TestAnalyzeDir(t *testing.T) {
 
 	analyzer := CreateAnalyzer()
 	dir := analyzer.AnalyzeDir(
-		"test_dir", func(_, _ string) bool { return false }, false,
+		"test_dir", func(_, _ string) bool { return false }, func(_ iofs.FileInfo) bool { return false }, false,
 	).(*Dir)
 
 	progress := <-analyzer.GetProgressChan()
@@ -72,7 +73,7 @@ func TestIgnoreDir(t *testing.T) {
 	defer fin()
 
 	dir := CreateAnalyzer().AnalyzeDir(
-		"test_dir", func(_, _ string) bool { return true }, false,
+		"test_dir", func(_, _ string) bool { return true }, func(_ iofs.FileInfo) bool { return true }, false,
 	).(*Dir)
 
 	assert.Equal(t, "test_dir", dir.Name)
@@ -91,7 +92,7 @@ func TestFlags(t *testing.T) {
 
 	analyzer := CreateAnalyzer()
 	dir := analyzer.AnalyzeDir(
-		"test_dir", func(_, _ string) bool { return false }, false,
+		"test_dir", func(_, _ string) bool { return false }, func(_ iofs.FileInfo) bool { return false }, false,
 	).(*Dir)
 	analyzer.GetDone().Wait()
 	dir.UpdateStats(make(fs.HardLinkedItems))
@@ -119,7 +120,7 @@ func TestHardlink(t *testing.T) {
 
 	analyzer := CreateAnalyzer()
 	dir := analyzer.AnalyzeDir(
-		"test_dir", func(_, _ string) bool { return false }, false,
+		"test_dir", func(_, _ string) bool { return false }, func(_ iofs.FileInfo) bool { return false }, false,
 	).(*Dir)
 	analyzer.GetDone().Wait()
 	dir.UpdateStats(make(fs.HardLinkedItems))
@@ -146,7 +147,7 @@ func TestErr(t *testing.T) {
 
 	analyzer := CreateAnalyzer()
 	dir := analyzer.AnalyzeDir(
-		"test_dir", func(_, _ string) bool { return false }, false,
+		"test_dir", func(_, _ string) bool { return false }, func(_ iofs.FileInfo) bool { return false }, false,
 	).(*Dir)
 	analyzer.GetDone().Wait()
 	dir.UpdateStats(make(fs.HardLinkedItems))
@@ -167,7 +168,7 @@ func BenchmarkAnalyzeDir(b *testing.B) {
 
 	analyzer := CreateAnalyzer()
 	dir := analyzer.AnalyzeDir(
-		"test_dir", func(_, _ string) bool { return false }, false,
+		"test_dir", func(_, _ string) bool { return false }, func(_ iofs.FileInfo) bool { return false }, false,
 	)
 	analyzer.GetDone().Wait()
 	dir.UpdateStats(make(fs.HardLinkedItems))
